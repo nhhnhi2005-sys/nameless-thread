@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nameless Thread · Spec 1 A1</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #2b2433; overflow: hidden; }
+  main { height: 100vh; display: flex; align-items: center; justify-content: center; }
+  canvas { width: min(100vw, 100vh * 16 / 9) !important; height: auto !important; display: block; }
+</style>
+</head>
+<body>
+<main id="holder"></main>
+<script src="p5.min.js"></script>
+<script src="photos.js"></script>
+<script src="sketch.js"></script>
+<script>
+window.addEventListener('load', () => setTimeout(() => {
+    const c = document.querySelector('canvas'); if (c) document.getElementById('holder').appendChild(c);
+    window.RENDERED = true;
+  }, 50));
+</script>
+</body>
+</html>
