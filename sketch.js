@@ -26,6 +26,7 @@ let img, photo, palette, threads, growth;
 let cellSize, stitchedAmount, cols, rows, darkest, lightest;
 let photoLeft = 0, photoCols;
 let edgeCells = [];
+let flipX, zoom;
 
 function preload() {
   photo = random(PHOTOS);
@@ -58,6 +59,8 @@ function chooseRandomSettings() {
   cellSize = floor(random(10, 19));
   if (photo.fit === 'contain') cellSize = floor(random(7, 12));
   stitchedAmount = random(0.35, 0.85);
+  flipX = random() < 0.5;
+  zoom = random(1, 1.6);
   cols = ceil(CANVAS_W / cellSize);
   rows = ceil(CANVAS_H / cellSize);
 }
@@ -71,11 +74,18 @@ function preparePhoto() {
     let w = img.width, h = img.height;
     if (w / h > cols / rows) w = h * cols / rows;
     else h = w * rows / cols;
+    w /= zoom;
+    h /= zoom;
     img = img.get(floor((img.width - w) * photo.focus[0]), floor((img.height - h) * photo.focus[1]), floor(w), floor(h));
     img.resize(cols, rows);
     photoCols = cols;
   }
   findLightRange();
+}
+
+function pixelAt(i, j) {
+  const px = i - photoLeft;
+  return img.get(flipX ? photoCols - 1 - px : px, j);
 }
 
 function inPhoto(i) {
@@ -120,7 +130,8 @@ function threadColour(px) {
 function growthScore(i, j) {
   const x = i / cols, y = j / rows;
   const wobble = noise(i * 0.06, j * 0.06) * 0.3;
-  if (growth === 'from the person') return dist(x, y, (photoLeft + photo.focus[0] * photoCols) / cols, photo.focus[1]) * 0.8 + wobble;
+  const fx = flipX ? 1 - photo.focus[0] : photo.focus[0];
+  if (growth === 'from the person') return dist(x, y, (photoLeft + fx * photoCols) / cols, photo.focus[1]) * 0.8 + wobble;
   if (growth === 'from the bottom') return (1 - y) * 0.7 + wobble;
   if (growth === 'from one side') return x * 0.7 + wobble;
   return map(noise(i * 0.035 + 50, j * 0.035 + 50), 0.3, 0.7, 0, 1);
@@ -140,7 +151,7 @@ function drawFabric() {
 function drawStitchCell(i, j) {
   if (!inPhoto(i)) return;
   const x = i * cellSize, y = j * cellSize;
-  const c = threadColour(img.get(i - photoLeft, j));
+  const c = threadColour(pixelAt(i, j));
   const score = growthScore(i, j);
   if (score < stitchedAmount) {
     drawLeg(x, y + cellSize, x + cellSize, y, c);
@@ -202,5 +213,5 @@ function drawNeedle(x, y, angle) {
 function showSettings() {
   const box = document.getElementById('settings');
   if (box) box.textContent = `photo: ${photo.file.slice(7)} · colours: ${palette.name} · stitch: ${cellSize}px · ` +
-    `finished: ${round(stitchedAmount * 100)}% · started: ${growth}`;
+    `finished: ${round(stitchedAmount * 100)}% · started: ${growth} · flip: ${flipX} · zoom: ${nf(zoom, 1, 2)}`;
 }
